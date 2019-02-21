@@ -1,0 +1,214 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Haconiwa - the mruby on container by haconiwa</title>
+
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/github-light.css">
+    <script src="javascripts/scale.fix.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1 class="header">Haconiwa - the mruby on container</h1>
+        <p class="header">Tha haconiwa teaser site</p>
+
+
+
+        <ul>
+          <li><a class="buttons github" href="https://github.com/haconiwa">GitHub Profile</a></li>
+        </ul>
+
+      </header>
+      <section>
+        <h1>
+<a id="haconiwa" class="anchor" href="#haconiwa" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Haconiwa</h1>
+
+<p><a href="https://travis-ci.org/haconiwa/haconiwa"><img src="https://travis-ci.org/haconiwa/haconiwa.svg?branch=master" alt="Build Status"></a></p>
+
+<p>mRuby on Container / helper tools with DSL for your handmade linux containers.</p>
+
+<p>Haconiwa (<code>箱庭</code> - a miniature garden) is a container builder DSL, by which you can choose any container-related technologies as you like:</p>
+
+<ul>
+<li>Linux namespace</li>
+<li>Linux control group(cgroup)</li>
+<li>Linux capabilities</li>
+<li>Bind mount / chroot</li>
+<li>Resource limit(rlimit)</li>
+<li>setuid/setgid</li>
+<li>...</li>
+</ul>
+
+<p>Haconiwa is written in <a href="https://mruby.org/">mruby</a>, so you can utilize Ruby DSL for creating your own container.</p>
+
+<h2>
+<a id="install-binary" class="anchor" href="#install-binary" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Install binary</h2>
+
+<p><code>haconiwa</code> packages are provided via <a href="https://packagecloud.io/udzura/haconiwa">packagecloud</a>.</p>
+
+<p>Available for: <code>CentOS &gt;= 7 / Ubuntu Trusty / Ubuntu Xenial / Debian jessie</code> (which are supported by best effort...)</p>
+
+<p>Other linuxes users can just download binaries from <a href="https://github.com/haconiwa/haconiwa/releases">latest</a>:</p>
+
+<div class="highlight highlight-source-shell"><pre>VERSION=0.2.2
+wget https://github.com/haconiwa/haconiwa/releases/download/v<span class="pl-smi">${VERSION}</span>/haconiwa-v<span class="pl-smi">${VERSION}</span>.x86_64-pc-linux-gnu.tgz
+tar xzf haconiwa-v<span class="pl-smi">${VERSION}</span>.x86_64-pc-linux-gnu.tgz
+sudo install hacorb hacoirb haconiwa /usr/local/bin
+haconiwa
+<span class="pl-c"># haconiwa - The MRuby on Container</span>
+<span class="pl-c"># commands:</span>
+<span class="pl-c">#     run       - run the container</span>
+<span class="pl-c">#     attach    - attach to existing container</span>
+<span class="pl-c">#     version   - show version</span>
+<span class="pl-c">#     revisions - show mgem/mruby revisions which haconiwa bin uses</span></pre></div>
+
+<p>NOTE: If you'd like using cgroup-related features, install cgroup package such as <code>cgroup-lite</code> (Ubuntu) or <code>cgroup-bin</code> (Debian).
+If you would not, these installation are not required.</p>
+
+<h2>
+<a id="example" class="anchor" href="#example" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Example</h2>
+
+<p>Create the file <code>example.haco</code>:</p>
+
+<div class="highlight highlight-source-ruby"><pre><span class="pl-c1">Haconiwa</span>::<span class="pl-c1">Base</span>.define <span class="pl-k">do </span>|<span class="pl-smi">config</span>|
+  config.name <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span>new-haconiwa001<span class="pl-pds">"</span></span> <span class="pl-c"># to be hostname</span>
+
+  config.cgroup[<span class="pl-s"><span class="pl-pds">"</span>cpu.shares<span class="pl-pds">"</span></span>] <span class="pl-k">=</span> <span class="pl-c1">2048</span>
+  config.cgroup[<span class="pl-s"><span class="pl-pds">"</span>memory.limit_in_bytes<span class="pl-pds">"</span></span>] <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span>256M<span class="pl-pds">"</span></span>
+  config.cgroup[<span class="pl-s"><span class="pl-pds">"</span>pid.max<span class="pl-pds">"</span></span>] <span class="pl-k">=</span> <span class="pl-c1">1024</span>
+
+  config.add_mount_point <span class="pl-s"><span class="pl-pds">"</span>/var/another/root/etc<span class="pl-pds">"</span></span>, <span class="pl-c1">to:</span> <span class="pl-s"><span class="pl-pds">"</span>/var/your_rootfs/etc<span class="pl-pds">"</span></span>, <span class="pl-c1">readonly:</span> <span class="pl-c1">true</span>
+  config.add_mount_point <span class="pl-s"><span class="pl-pds">"</span>/var/another/root/home<span class="pl-pds">"</span></span>, <span class="pl-c1">to:</span> <span class="pl-s"><span class="pl-pds">"</span>/var/your_rootfs/home<span class="pl-pds">"</span></span>
+  config.mount_independent_procfs
+  config.chroot_to <span class="pl-s"><span class="pl-pds">"</span>/var/your_rootfs<span class="pl-pds">"</span></span>
+
+  config.namespace.unshare <span class="pl-s"><span class="pl-pds">"</span>ipc<span class="pl-pds">"</span></span>
+  config.namespace.unshare <span class="pl-s"><span class="pl-pds">"</span>uts<span class="pl-pds">"</span></span>
+  config.namespace.unshare <span class="pl-s"><span class="pl-pds">"</span>mount<span class="pl-pds">"</span></span>
+  config.namespace.unshare <span class="pl-s"><span class="pl-pds">"</span>pid<span class="pl-pds">"</span></span>
+
+  config.capabilities.allow <span class="pl-c1">:all</span>
+  config.capabilities.drop <span class="pl-s"><span class="pl-pds">"</span>cap_sys_admin<span class="pl-pds">"</span></span>
+<span class="pl-k">end</span></pre></div>
+
+<p>Then use <code>haconiwa</code> binary installed with thie gem.</p>
+
+<div class="highlight highlight-text-shell-session"><pre>$ <span class="pl-s1">haconiwa run example.haco</span></pre></div>
+
+<p>When you want to attach existing container:</p>
+
+<div class="highlight highlight-text-shell-session"><pre>$ <span class="pl-s1">haconiwa attach example.haco</span></pre></div>
+
+<p>Note: <code>attach</code> subcommand allows to set PID(<code>--target</code>) or container name(<code>--name</code>) for dynamic configuration.
+And <code>attach</code> is not concerned with capabilities which is granted to container. So you can drop or allow specific caps with <code>--drop/--allow</code>.</p>
+
+<h3>
+<a id="dsl-spec" class="anchor" href="#dsl-spec" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>DSL spec</h3>
+
+<ul>
+<li>
+<code>config.resource.set_limit</code> - Set the resource limit of container, using <code>setrlimit</code>
+</li>
+<li>
+<code>config.cgroup</code> - Assign cgroup parameters via <code>[]=</code>
+</li>
+<li>
+<code>config.namespace.unshare</code> - Unshare the namespaces like <code>"mount"</code>, <code>"ipc"</code> or <code>"pid"</code>
+</li>
+<li>
+<code>config.capabilities.allow</code> - Allow capabilities on container root. Setting parameters other than <code>:all</code> should make this acts as whitelist</li>
+<li>
+<code>config.capabilities.drop</code> - Drop capabilities of container root. Default to act as blacklist</li>
+<li>
+<code>config.add_mount_point</code> - Add the mount point odf container</li>
+<li>
+<code>config.mount_independent_procfs</code> - Mount the independent /proc directory in the container. Useful if <code>"pid"</code> is unshared</li>
+<li>
+<code>config.chroot_to</code> - The new chroot root</li>
+<li>
+<code>config.uid=/config.gid=</code> - The new container's running uid/gid. <code>groups=</code> is also respected</li>
+<li>
+<code>config.add_handler</code> - Define signal handler at supervisor process(not container itself). Available signals are <code>SIGTTIN/SIGTTOU/SIGUSR1/SIGUSR2</code>. See <a href="https://github.com/haconiwa/haconiwa/blob/master/sample/cpu.haco">handler example</a>.</li>
+</ul>
+
+<p>You can pick your own parameters for your use case of container.
+e.g. just using <code>mount</code> namespace unshared, container with common filesystem, limit the cgroups for big resource job and so on.</p>
+
+<p>Please look into <a href="https://github.com/haconiwa/haconiwa/blob/master/sample"><code>sample</code></a> directory.</p>
+
+<h3>
+<a id="programming-the-container-world-by-mruby" class="anchor" href="#programming-the-container-world-by-mruby" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Programming the container world by mruby</h3>
+
+<p>e.g.:</p>
+
+<div class="highlight highlight-source-ruby"><pre><span class="pl-c1">Namespace</span>.unshare(<span class="pl-c1">Namespace</span>::<span class="pl-c1">CLONE_NEWNS</span>)
+<span class="pl-c1">Namespace</span>.unshare(<span class="pl-c1">Namespace</span>::<span class="pl-c1">CLONE_NEWPID</span>)
+
+m <span class="pl-k">=</span> <span class="pl-c1">Mount</span>.<span class="pl-k">new</span>
+
+m.make_private <span class="pl-s"><span class="pl-pds">"</span>/<span class="pl-pds">"</span></span>
+m.bind_mount <span class="pl-s"><span class="pl-pds">"</span>/var/lib/myroot<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>/var/lib/haconiwa/root<span class="pl-pds">"</span></span>
+
+<span class="pl-c1">Dir</span>.chroot <span class="pl-s"><span class="pl-pds">"</span>/var/lib/haconiwa<span class="pl-pds">"</span></span>
+<span class="pl-c1">Dir</span>.chdir <span class="pl-s"><span class="pl-pds">"</span>/<span class="pl-pds">"</span></span>
+
+c <span class="pl-k">=</span> <span class="pl-c1">Process</span>.fork {
+  m.mount <span class="pl-s"><span class="pl-pds">"</span>proc<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>/proc<span class="pl-pds">"</span></span>, <span class="pl-c1">:type</span> =&gt; <span class="pl-s"><span class="pl-pds">"</span>proc<span class="pl-pds">"</span></span>
+  <span class="pl-c1">Exec</span>.exec <span class="pl-s"><span class="pl-pds">"</span>/bin/sh<span class="pl-pds">"</span></span>
+}
+pid, ret <span class="pl-k">=</span> <span class="pl-c1">Process</span>.waitpid2 c
+puts <span class="pl-s"><span class="pl-pds">"</span>Container exited with: <span class="pl-pse">#{</span><span class="pl-s1">ret.inspect</span><span class="pl-pse"><span class="pl-s1">}</span></span><span class="pl-pds">"</span></span></pre></div>
+
+<p>See dependent gem's READMEs.</p>
+
+<h2>
+<a id="development" class="anchor" href="#development" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Development</h2>
+
+<ul>
+<li>
+<code>rake compile</code> will create binaries.</li>
+<li>
+<code>rake</code> won't be passed unless you are not on Linux.</li>
+<li>This project is built upon great <a href="https://github.com/hone/mruby-cli">mruby-cli</a>. Please browse its README.</li>
+</ul>
+
+<h2>
+<a id="contributing" class="anchor" href="#contributing" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Contributing</h2>
+
+<p>Bug reports and pull requests are welcome on GitHub at <a href="https://github.com/haconiwa/haconiwa">https://github.com/haconiwa/haconiwa</a>. This project is intended to be a safe, welcoming space for collaboration, and contributors are expected to adhere to the <a href="http://contributor-covenant.org">Contributor Covenant</a> code of conduct.</p>
+
+<h2>
+<a id="todos" class="anchor" href="#todos" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>TODOs</h2>
+
+<ul>
+<li>[ ] Haconiwa DSL compiler</li>
+<li>[ ] netns attachment</li>
+<li>[ ] More utilities such as <code>ps</code>
+</li>
+<li>[ ] Better daemon handling</li>
+</ul>
+
+<h2>
+<a id="license" class="anchor" href="#license" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>License</h2>
+
+<p>Haconiwa core is under the GPL v3 License: See <a href="https://github.com/haconiwa/haconiwa/blob/master/LICENSE">LICENSE</a> file.</p>
+
+<p>Bundled libraries (libcap, libcgroup, libargtable and mruby) are licensed by each authors. See <code>LICENSE_*</code> file.</p>
+
+<p>For other mgems' licenses, especially ones which are not bundled by mruby-core, please refer their <code>github.com</code> repository.</p>
+      </section>
+      <footer>
+        <p><small>Hosted on <a href="https://pages.github.com">GitHub Pages</a> using the Dinky theme</small></p>
+      </footer>
+    </div>
+    <!--[if !IE]><script>fixScale(document);</script><![endif]-->
+		
+  </body>
+</html>
